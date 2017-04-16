@@ -6,4 +6,4 @@ C++ := g++
 all: isomorphicstring
 
 clean:
-	rm -f isomorphicstring
+	rm -f isomorphicstring bfsshortestreach

@@ -3,6 +3,14 @@ import sys
 
 
 def deletions(a, b):
+    """deletions
+
+    Output the number of deletions required
+    to make a and b anagrams of each other 
+
+    :param a:
+    :param b:
+    """
     ds = 0
     a_map = {}
     b_map = {}
