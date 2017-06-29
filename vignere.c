@@ -7,7 +7,12 @@
 #define KEY_CHARSET "QWERTYUIOPASDFGHJKLZXCVBNM"
 #define MAX_MSG_SIZE 2048
 #define BUFSIZE (MAX_MSG_SIZE * 2)
-#define DIE(errnum) { errno = errnum; perror("fatal"); exit(1); };
+#define DIE(errnum) { errno = errnum; perror("fatal"); exit(1); }
+#define BYPASS_NON_ALPHA(dest, msg) { \
+  if (*msg < 'A' || 'Z' < *msg) { \
+    *dest = *msg; continue; \
+  } \
+}
 
 static inline int _alpha_shift(int i, char *key, int keylen) {
   register int key_index, shift;
@@ -22,10 +27,7 @@ void vi_encrypt(char *dest, char *key, char *msg_start) {
   int keylen = strnlen(key, MAX_MSG_SIZE);
   int i = 0;
   for (; msg < msg_end; ++msg, ++dest) {
-    if (*msg < 'A' || 'Z' < *msg) {
-      *dest = *msg;
-      continue;
-    }
+    BYPASS_NON_ALPHA(dest, msg);
     *dest = 'A' + (*msg - 'A' + _alpha_shift(i, key, keylen)) %26;
     ++i;
   }
@@ -37,10 +39,7 @@ void vi_decrypt(char *dest, char *key, char *msg_start) {
   int keylen = strnlen(key, MAX_MSG_SIZE);
   int i = 0;
   for (; msg < msg_end; ++msg, ++dest) {
-    if (*msg < 'A' || 'Z' < *msg) {
-      *dest = *msg;
-      continue;
-    }
+    BYPASS_NON_ALPHA(dest, msg);
     *dest = 'A' + ((*msg - 'A' - _alpha_shift(i, key, keylen)) % 26 + 26) % 26;
     ++i;
   }
@@ -69,8 +68,11 @@ int main(void) {
        *dest = calloc(1, MAX_MSG_SIZE),
        *key=0,
        *msg=0;
-  if (!read(STDIN_FILENO, buf, MAX_MSG_SIZE*2))
+  size_t n;
+  n = read(STDIN_FILENO, buf, MAX_MSG_SIZE*2-1);
+  if (!n)
     DIE(EAGAIN)
+  *(buf+n+1) = 0;
 
   switch (*buf) { 
     case 'e':
@@ -87,7 +89,7 @@ int main(void) {
       break;
   }
 #ifdef DEBUG
-  printf("%s\n", dest);
+  printf("out %s\n", dest);
 #else
   printf("%s\n", dest);
 #endif
