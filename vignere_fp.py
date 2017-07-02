@@ -1,18 +1,18 @@
-def normalize(s):
-    return list(map(_normalize_alpha_ord, s.upper()))
+# patch out python2, lulz
+try:
+    from itertools import imap
+    map = imap
+except ImportError:
+    pass
 
 
-def _normalize_alpha_ord(c):
+def normalize(c):
     if c not in 'QWERTYUIOPASDFGHJKLZXCVBNM':
         return c
     return ord(c) - ord('A')
 
 
-def ascii_transform(s):
-    return list(map(_ascii_transofrm_alpha_ord, s))
-
-
-def _ascii_transofrm_alpha_ord(c):
+def ascii_transform(c):
     if not isinstance(c, int):
         return c
     return chr(ord('A') + c)
@@ -20,6 +20,8 @@ def _ascii_transofrm_alpha_ord(c):
 
 def vignere_transform(k, s, factor=1):
     plain_chars_count = 0
+    s = list(s)
+    k = list(k)
     for i, c in enumerate(s):
         if not isinstance(c, int):
             plain_chars_count += 1
@@ -30,17 +32,17 @@ def vignere_transform(k, s, factor=1):
 
 
 def enc(k, s):
-    s = normalize(s)
-    k = normalize(k)
-    vignere_transform(k, s)
-    return "".join(ascii_transform(s))
+    s = map(normalize, s)
+    k = map(normalize, k)
+    s = vignere_transform(k, s)
+    return "".join(map(ascii_transform, s))
 
 
 def dec(k, s):
-    s = normalize(s)
-    k = normalize(k)
-    vignere_transform(k, s, -1)
-    return "".join(ascii_transform(s))
+    s = map(normalize, s)
+    k = map(normalize, k)
+    s = vignere_transform(k, s, -1)
+    return "".join(map(ascii_transform, s))
 
 
 if __name__ == '__main__':
